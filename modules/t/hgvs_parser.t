@@ -44,7 +44,7 @@ my $cdba = $multi->get_DBAdaptor('core');
 
 use_ok('Bio::EnsEMBL::Variation::DBSQL::VariationFeatureAdaptor');
 
-my $DEBUG = 0;
+my $DEBUG = 1;
 
 ## 3 pairs of hashes of equivalent names (some correct, some not) and output annotation
 ## Annotation format:  key =>  [hgvs_genomic,  variant_allele, hgvs_[non]coding,  variant_allele, hgvs_protein,  test_description, ref allele]
@@ -530,9 +530,9 @@ my %test_input_shifted = (
 
 ## results which change on left-shifting - not shifted
 my %test_output_no_shift = ( 
-     1 => ["X:g.131215393dup",
+     1 => ["X:g.131215394dup",
            "A",
-           "ENST00000298542.4:c.905+998dup",
+           "ENST00000298542.4:c.905+997dup",
            "T",
            "",
            "duplication, intronic rc transcript"
@@ -586,8 +586,8 @@ my %test_output_no_shift = (
 
 
 my %test_input_no_shift = ( 
-     1 => ["X:g.131215393dup",
-           "ENST00000298542.4:c.905+998dup",
+     1 => ["X:g.131215394dup",
+           "ENST00000298542.4:c.905+997dup",
           ],    
      2 => ["NC_000011.9:g.32417913_32417914insCCTACGAGTACTACC",
            "ENST00000530998.1:c.451_452insGGTAGTACTCGTAGG",
@@ -675,7 +675,7 @@ sub get_results{
  
   ## create variation feature from hgvs string
   my $variation_feature ;
-        
+
   eval{
     $variation_feature = $variationfeature_adaptor->fetch_by_hgvs_notation( $input );
   };
