@@ -1874,6 +1874,12 @@ sub hgvs_genomic {
 
   my $tr_vf = $self;
   my ($vf_start, $vf_end, $ref_length) = ($tr_vf->start, $tr_vf->end, ($ref_feature->end - $ref_feature->start) + 1);
+  
+  print "------------------ hgvs_genomic ----------------\n";
+  print "vf_start $vf_start\n";
+  print "vf_end $vf_end\n";
+  print "ref_length $ref_length\n";
+  print "---------------------------------------------------------\n";
 
   # Return undef if this VariationFeature does not fall within the supplied feature.
   return {} if ($vf_start < 1 ||
@@ -1969,6 +1975,11 @@ sub hgvs_genomic {
       reverse_comp(\$check_allele) if $flip_allele == 1 ;
     }
 
+    print "------------------ hgvs_genomic ----------------\n";
+    print "ref_start $ref_start\n";
+    print "ref_end $ref_end\n";
+    print "---------------------------------------------------------\n";
+    
     my $hgvs_notation = hgvs_variant_notation(
       $check_allele,          ## alt allele in refseq strand orientation
       $ref_seq,               ## substring of slice for ref allele extraction
@@ -1976,7 +1987,11 @@ sub hgvs_genomic {
       $ref_end + $offset,
       $chr_start + $offset,   ## start wrt seq region slice is on (eg. chrom)
       $chr_end + $offset,
-      $self->variation_name() ## for error message
+      $self->variation_name(), ## for error message
+      $self->strand(),
+      undef,
+      undef,
+      $offset
     );
 
     # Skip if e.g. allele is identical to the reference slice

@@ -498,6 +498,10 @@ sub hgvs_variant_notation {
   my $display_start = shift;
   my $display_end = shift;
   my $var_name  = shift;
+  my $strand = shift;
+  my $type = shift;
+  my $tr_strand = shift;
+  my $offset = shift;
 
   # If display_start and display_end were not specified, use ref_start and ref_end
   $display_start ||= $ref_start;
@@ -527,6 +531,13 @@ sub hgvs_variant_notation {
     return undef ;
   }
 
+  $strand ||= 1;
+  $strand = -1 if $offset < 0;
+  print "----------hgvs_variant_notation-----------\n";
+  print "strand $strand\n";
+  print "display end $display_end\n";
+  print "display start $display_start\n";
+  
   # Store the notation in a hash that will be returned
   my %notation;
   $notation{'start'} = $display_start;
@@ -572,8 +583,40 @@ sub hgvs_variant_notation {
     # If they match, this is a duplication
     if ($prev_str eq $alt_allele) {
 
-      $notation{'start'} = ($display_end - $alt_length + 1);
+      if($type eq "transcript"){
+        # if( $strand < 0) {
+          # $notation{'start'} = ($display_end - $alt_length + 1);
+        # }
+        # else {
+        #   $notation{'end'} = ($display_end + 1);
+        #   $notation{'start'} = ($notation{'end'} + $alt_length - 1);      
+        # }
+        if ($strand == $tr_strand){
+          $notation{'start'} = ($display_end - $alt_length + 1);
+        }
+        else {
+          $notation{'end'} = ($display_end + 1);
+          $notation{'start'} = ($notation{'end'} + $alt_length - 1); 
+        }
+        # else{
+        #   $notation{'end'} = ($display_end - 1);
+        #   $notation{'start'} = ($notation{'end'} + $alt_length - 1); 
+        # }
+      }
+      else{
+        if($offset > 0 || $strand > 0) {
+          $notation{'start'} = ($display_end - $alt_length + 1);
+        }
+        else {
+          $notation{'end'} = ($display_end + 1);
+          $notation{'start'} = ($notation{'end'} + $alt_length - 1);      
+        }
+      }
       $notation{'type'} = 'dup';
+      
+      print "notation end ", $notation{'end'}, "\n";
+      print "notation start ", $notation{'start'}, "\n";
+      print "------------------------------------------\n";
 
       # Return the notation
       return \%notation;

@@ -1840,6 +1840,20 @@ sub fetch_by_hgvs_notation {
 
         $slice = $slice_adaptor->fetch_by_region($transcript->coord_system_name(),$transcript->seq_region_name());   
         ($ref_allele, $alt_allele) = get_hgvs_alleles($hgvs);
+        
+print "------------------ fetch_by_hgvs_notation ----------------\n";
+print "hgvs $hgvs\n";
+print "reference $reference\n";
+print "type $type\n";
+print "description $description\n";
+print "slice $slice\n";
+print "ref_allele $ref_allele\n";
+print "alt_allele $alt_allele\n";
+print "start $start\n";
+print "end $end\n";
+print "strand $strand\n";
+print "replace_ref $replace_ref\n";
+print "---------------------------------------------------------\n";
 
         $result = $self->_hgvs_from_components(
           $hgvs, $reference, $type, $description,
@@ -2049,8 +2063,14 @@ sub _hgvs_from_components {
   # take alternate allele from genomic reference & coordinates if not supplied in HGVS string for a duplication
   if($description =~ /dup/){ 
     ## special case: handle as insertion for ensembl object purposes 
-    $start = $end + 1; 
-
+    $start = $end;
+    if ($strand > 0){
+      $start++; 
+    }
+    else {
+      $end--;
+    }
+    
     $ref_allele = "-" ;
     $alt_allele = $refseq_allele;
   }
@@ -2102,6 +2122,14 @@ sub _hgvs_from_components {
     '-alleles' => \@allele_objs
   );
 
+  print "------------------ _hgvs_from_components ----------------\n";
+  print "ref_allele $ref_allele\n";
+  print "alt_allele $alt_allele\n";
+  print "start $start\n";
+  print "end $end\n";
+  print "strand $strand\n";
+  print "---------------------------------------------------------\n";
+  
   #Create a variation feature object
   my $variation_feature = Bio::EnsEMBL::Variation::VariationFeature->new(
     '-adaptor'       => $self,

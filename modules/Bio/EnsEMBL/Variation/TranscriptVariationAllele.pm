@@ -1328,7 +1328,7 @@ sub hgvs_transcript {
 
   my $var_name = $vf->variation_name();
 
-  if($DEBUG ==1){    
+  if($DEBUG ==0){    
   	print "\nHGVS transcript: Checking ";
   	print " var_name $var_name " if defined $var_name ;
   	print " refseq strand => $refseq_strand"  if defined $refseq_strand;
@@ -1376,7 +1376,7 @@ sub hgvs_transcript {
   	return undef;
   }
   ## this may be different to the input one for insertions/deletions
-    print "vfs: $variation_feature_sequence &  $self->{_slice_start} -> $self->{_slice_end}\n" if $DEBUG ==1;
+  print "vfs: $variation_feature_sequence &  $self->{_slice_start} -> $self->{_slice_end}\n" if $DEBUG ==1;
   if($variation_feature_sequence && $vf->strand() != $refseq_strand) {    
     reverse_comp(\$variation_feature_sequence) ;
   };
@@ -1385,8 +1385,25 @@ sub hgvs_transcript {
   delete($self->{_predicate_cache}) if $self->transcript_variation->{shifted} && $offset_to_add != 0; 
   print "sending alt: $variation_feature_sequence &  $self->{_slice_start} -> $self->{_slice_end} for formatting\n" if $DEBUG ==1;
   
+  print "--------------------- hgvs_transcript ----------------------------\n";
+  print "start ", $self->{_slice_start}, "\n";
+  print "end ", $self->{_slice_end}, "\n";
+  
   return undef if (($self->{_slice}->end - $self->{_slice}->start + 1) < ($self->{_slice_end} + $offset_to_add));
   #return undef if (length($self->{_slice}->seq()) < ($self->{_slice_end} + $offset_to_add));
+  
+  # my ($slice_start, $slice_end) = $tr->strand() < 0 ? (length($self->{_slice}->seq()) - $self->{_slice_end} + 1, length($self->{_slice}->seq()) - $self->{_slice_start} + 1) : ($self->{_slice_start}, $self->{_slice_end});
+  
+  # my $ref_allele = $self->{_slice}->seq();
+  # if ($tr->strand() < 0){
+  #   reverse_comp(\$ref_allele);
+  # }
+  # print "ref allele: $ref_allele\n";
+  # print "alt allele: $variation_feature_sequence\n";
+  # if($vf->strand() < 0) {    
+  #   reverse_comp(\$variation_feature_sequence) ;
+  # };
+
   $hgvs_notation = hgvs_variant_notation(
     $variation_feature_sequence,    ### alt_allele,
     $self->{_slice}->seq(),                             ### using this to extract ref allele
@@ -1394,8 +1411,19 @@ sub hgvs_transcript {
     $self->{_slice_end} + $offset_to_add,
     "",
     "",
-    $var_name 
+    $var_name,
+    $vf->strand(),
+    "transcript",
+    $tr->strand(),
+    $offset_to_add
   );
+  print $hgvs_notation->{type}, "\n";
+  # ($hgvs_notation->{start}, $hgvs_notation->{end}) = (length($self->{_slice}->seq()) - $hgvs_notation->{end} + 1, length($self->{_slice}->seq()) - $hgvs_notation->{start} + 1) if $tr->strand() < 0;
+  
+  # if($tr->strand() < 0) {        
+  #   reverse_comp(\$hgvs_notation->{alt});
+  #   reverse_comp(\$hgvs_notation->{ref});
+  # };
   
   ### This should not happen
   unless($hgvs_notation->{'type'}){
@@ -1427,6 +1455,10 @@ sub hgvs_transcript {
   my $misalignment_offset = 0;
   $misalignment_offset = $self->get_misalignment_offset(\@edit_attrs) if (scalar(@edit_attrs) && (substr($tr->stable_id, 0,3) eq 'NM_' || substr($tr->stable_id, 0,3) eq 'XM_'));
   
+
+  print "start ", $hgvs_notation->{start}  , "\n";
+  print "end ", $hgvs_notation->{end} , "\n";
+  print "------------------------------------------------------------------\n";
   if ($vf->var_class eq 'SNP' && defined($self->{pre_consequence_predicates}) && $self->{pre_consequence_predicates}->{exon} && defined($tv->cds_start) && defined($tv->cds_end)) {
     $hgvs_notation->{start} = $tv->cds_start;
     $hgvs_notation->{end}   = $hgvs_notation->{start};
@@ -1436,6 +1468,7 @@ sub hgvs_transcript {
     $hgvs_notation->{end}   = $same_pos ? $hgvs_notation->{start} : $self->_get_cDNA_position( $hgvs_notation->{end} + $misalignment_offset );
   }
   return undef unless defined  $hgvs_notation->{start}  && defined  $hgvs_notation->{end} ;
+  
 
   # Make sure that start is always less than end
   my ($exon_start_coord, $intron_start_offset) = $hgvs_notation->{start} =~ m/(\-?[0-9]+)\+?(\-?[0-9]+)?/;
@@ -2568,10 +2601,13 @@ sub _var2transcript_slice_coords{
 
   # same slice, easy and we don't need to use transfer
   if($NO_TRANSFER || $tr->slice eq $vf->slice) {
-
+  
     # different transform depending on transcript strand
     if($tr->strand < 1) {
-
+      print "--------_var2transcript_slice_coords-------\n";
+      print "start ", $vf->start, "\n";
+      print "end ", $vf->end, "\n";
+      print "--------------------------------------------\n";
       # note we switch start/end here
       # this also works in the case of insertions thankfully
       ($vf_start, $vf_end) = map {($tr_end - $_) + 1} ($vf->end, $vf->start) unless $vf->{shifted_flag};
